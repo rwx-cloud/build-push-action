@@ -1,32 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-get_latest_v2_version() {
-  local api_url="https://api.github.com/repos/rwx-cloud/cli/releases"
-  local latest_version
-  
-  local releases_json
-  if ! releases_json=$(curl -fsSL "$api_url" 2>/dev/null); then
-    echo "Warning: Could not fetch releases from GitHub API, falling back to v2.1.0" >&2
-    echo "v2.1.0"
-    return
-  fi
-  
-  if command -v jq >/dev/null 2>&1; then
-    latest_version=$(echo "$releases_json" | jq -r \
-      '[.[] | select(.tag_name | startswith("v2.")) | .tag_name] | sort_by(. | ltrimstr("v") | split(".") | map(tonumber)) | last' 2>/dev/null)
-  else
-    latest_version=$(echo "$releases_json" | \
-      grep -oE '"tag_name":\s*"v[0-9]+\.[0-9]+\.[0-9]+"' | \
-      sed 's/"tag_name":\s*"\(.*\)"/\1/' | \
-      grep -E '^v2\.' | \
-      sort -V | \
-      tail -1)
-  fi
-  
-  echo "$latest_version"
-}
-
 install_rwx_cli() {
   local version="$1"
   local os arch
@@ -143,10 +117,7 @@ main() {
     exit 1
   fi
   
-  local rwx_cli_version
-  rwx_cli_version=$(get_latest_v2_version)
-  
-  install_rwx_cli "$rwx_cli_version"
+  install_rwx_cli "v2.1.0"
   
   if [ -z "${RWX_ACCESS_TOKEN:-}" ]; then
     echo "Error: RWX_ACCESS_TOKEN environment variable is required" >&2
