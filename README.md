@@ -156,8 +156,11 @@ jobs:
 By default, this action will not pull the built image to your local Docker daemon after building.
 Use `pull: true` if you intend to use the image in additional steps within the same job.
 
+You will also likely need to be running a Docker daemon in order to pull the image.
+A minimal example is shown below.
+
 ```yaml
-name: Build Image (No Pull)
+name: Build And Pull Image
 
 on:
   push:
@@ -168,6 +171,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - name: Start Docker daemon (dind, vfs)
+        run: |
+          docker run -d --name dind \
+            --privileged \
+            -p 2375:2375 \
+            -e DOCKER_TLS_CERTDIR= \
+            docker:27-dind --storage-driver=vfs
+
+          # Wait for daemon
+          for i in {1..60}; do
+            docker -H tcp://localhost:2375 ps > /dev/null 2>&1 && break
+            sleep 1
+          done
+
+          echo "DOCKER_HOST=tcp://localhost:2375" >> $GITHUB_ENV
+          echo "DOCKER_TLS_CERTDIR=" >> $GITHUB_ENV
+
       - uses: rwx-cloud/build-push-action@v1
         with:
           access-token: ${{ secrets.RWX_ACCESS_TOKEN }}
