@@ -1,0 +1,20 @@
+name: Build with JSON Init Parameters Example
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build with JSON Init Parameters
+        uses: rwx-cloud/build-push-action@v1
+        with:
+          access-token: ${{ secrets.RWX_ACCESS_TOKEN }}
+          file: .rwx/build.yml
+          target: app
+          init: '{"version":"${{ github.sha }}","env":"production","build_number":"${{ github.run_number }}"}'
+

@@ -1,0 +1,55 @@
+name: 'RWX Image Build'
+description: 'Build OCI-compliant container images on RWX'
+branding:
+  icon: 'package'
+  color: 'green'
+inputs:
+  access-token:
+    description: 'RWX access token'
+    required: true
+  file:
+    description: 'Path to RWX config file (e.g., .rwx/build.yml)'
+    required: true
+  target:
+    description: 'Task key to build'
+    required: true
+  init:
+    description: 'Init parameters as JSON object or key=value pairs (comma-separated)'
+    required: false
+  push-to:
+    description: 'Registry reference to push to. Format: registry.com/namespace/image:tag. Requires Docker to be authenticated to the registry (e.g., via docker/login-action in a previous step).'
+    required: false
+  pull:
+    description: 'Pull the built image to the local Docker daemon after building.'
+    required: false
+    default: 'false'
+  cache:
+    description: 'Enable RWX cache. Set to false to disable caching.'
+    required: false
+    default: 'true'
+  timeout:
+    description: 'Build timeout (e.g., 30m, 1h)'
+    required: false
+    default: '30m'
+outputs:
+  image-reference:
+    description: 'Full image reference (Docker registry reference if pushed, otherwise RWX image reference)'
+  run-url:
+    description: 'URL to view the run in RWX Cloud'
+  json:
+    description: 'Complete JSON object with all details'
+runs:
+  using: 'composite'
+  steps:
+    - run: ${{ github.action_path }}/entrypoint.sh
+      shell: bash
+      env:
+        RWX_ACCESS_TOKEN: ${{ inputs.access-token }}
+        INPUT_FILE: ${{ inputs.file }}
+        INPUT_TARGET: ${{ inputs.target }}
+        INPUT_INIT: ${{ inputs.init }}
+        INPUT_PUSH_TO: ${{ inputs.push-to }}
+        INPUT_PULL: ${{ inputs.pull }}
+        INPUT_CACHE: ${{ inputs.cache }}
+        INPUT_TIMEOUT: ${{ inputs.timeout }}
+
